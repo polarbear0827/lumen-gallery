@@ -32,6 +32,11 @@ test('完整來源面板可開啟並以鍵盤關閉', async ({ page }) => {
   await expect(drawer).toBeHidden()
 })
 
+test('全螢幕控制具有可存取名稱', async ({ page }) => {
+  await page.goto('./')
+  await expect(page.getByRole('button', { name: '進入全螢幕' })).toBeVisible()
+})
+
 test('行動版沒有水平溢位，控制項符合觸控尺寸', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile', '只在行動版專案執行')
   await page.goto('./')
