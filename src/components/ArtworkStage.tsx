@@ -11,7 +11,6 @@ export const ArtworkStage = forwardRef<HTMLElement, ArtworkStageProps>(function 
   { artwork, onSwipePrevious, onSwipeNext },
   ref,
 ) {
-  const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
 
@@ -31,7 +30,7 @@ export const ArtworkStage = forwardRef<HTMLElement, ArtworkStageProps>(function 
       }}
     >
       <div
-        className={`artwork-frame ${loaded ? 'is-loaded' : ''}`}
+        className="artwork-frame"
         style={{ aspectRatio: `${artwork.aspectWidth} / ${artwork.aspectHeight}` }}
       >
         {failed ? (
@@ -45,7 +44,6 @@ export const ArtworkStage = forwardRef<HTMLElement, ArtworkStageProps>(function 
             alt={`${artwork.titleZh}，${artwork.artist}，${artwork.date}`}
             width={artwork.aspectWidth}
             height={artwork.aspectHeight}
-            onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
             draggable={false}
             decoding="async"

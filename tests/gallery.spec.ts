@@ -29,8 +29,9 @@ test('36 件作品皆使用站內影像並可正常載入', async ({ page }) => 
     await expect.poll(() => image.evaluate((element: HTMLImageElement) => ({
       complete: element.complete,
       naturalWidth: element.naturalWidth,
+      opacity: getComputedStyle(element).opacity,
       sameOrigin: new URL(element.currentSrc).origin === window.location.origin,
-    }))).toEqual({ complete: true, naturalWidth: expect.any(Number), sameOrigin: true })
+    }))).toEqual({ complete: true, naturalWidth: expect.any(Number), opacity: '1', sameOrigin: true })
     expect(await image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0)
     if (index < 35) await nextButton.click()
   }

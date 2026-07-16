@@ -312,12 +312,6 @@ a:focus-visible {
   max-height: min(54svh, 590px);
   display: block;
   object-fit: contain;
-  opacity: 0;
-  transition: opacity 360ms ease;
-}
-
-.artwork-frame.is-loaded img {
-  opacity: 1;
 }
 
 .image-error {
