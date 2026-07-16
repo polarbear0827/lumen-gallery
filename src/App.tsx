@@ -20,6 +20,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement))
   const detailsButtonRef = useRef<HTMLButtonElement>(null)
+  const artworkStageRef = useRef<HTMLElement>(null)
 
   const filteredArtworks = useMemo(
     () => museumFilter === 'all' ? artworks : artworks.filter((artwork) => artwork.museumId === museumFilter),
@@ -63,7 +64,7 @@ export default function App() {
   const toggleFullscreen = useCallback(async () => {
     try {
       if (document.fullscreenElement) await document.exitFullscreen()
-      else await document.documentElement.requestFullscreen()
+      else await artworkStageRef.current?.requestFullscreen()
     } catch {
       setIsFullscreen(false)
     }
@@ -124,6 +125,7 @@ export default function App() {
 
       <main id="gallery-main" className="gallery-main" aria-hidden={view !== 'gallery'}>
         <ArtworkStage
+          ref={artworkStageRef}
           key={selectedArtwork.id}
           artwork={selectedArtwork}
           onSwipePrevious={() => selectByOffset(-1)}

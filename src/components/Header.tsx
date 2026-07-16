@@ -38,10 +38,10 @@ export function Header({ activeView, isFullscreen, isMenuOpen, onViewChange, onF
           className="fullscreen-button"
           type="button"
           onClick={onFullscreen}
-          aria-label={isFullscreen ? '離開全螢幕' : '進入全螢幕'}
+          aria-label={isFullscreen ? '離開作品全螢幕' : '作品全螢幕'}
         >
           <ExpandIcon />
-          <span>{isFullscreen ? '離開全螢幕' : '進入全螢幕'}</span>
+          <span>{isFullscreen ? '離開作品全螢幕' : '作品全螢幕'}</span>
         </button>
       </div>
 

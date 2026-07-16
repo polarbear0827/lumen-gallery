@@ -57,7 +57,7 @@ export function SourceDrawer({ artwork, museum, onClose }: SourceDrawerProps) {
           </div>
           <div>
             <dt>影像來源</dt>
-            <dd>{artwork.imageAttribution}</dd>
+            <dd>本站保存之官方開放影像顯示用副本；{artwork.imageAttribution}</dd>
           </div>
           <div>
             <dt>資料來源</dt>

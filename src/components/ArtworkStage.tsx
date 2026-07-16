@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { forwardRef, useState } from 'react'
 import type { Artwork } from '../types'
 
 interface ArtworkStageProps {
@@ -7,13 +7,17 @@ interface ArtworkStageProps {
   onSwipeNext: () => void
 }
 
-export function ArtworkStage({ artwork, onSwipePrevious, onSwipeNext }: ArtworkStageProps) {
+export const ArtworkStage = forwardRef<HTMLElement, ArtworkStageProps>(function ArtworkStage(
+  { artwork, onSwipePrevious, onSwipeNext },
+  ref,
+) {
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
 
   return (
     <figure
+      ref={ref}
       className="artwork-stage"
       onTouchStart={(event) => setTouchStart(event.changedTouches[0]?.clientX ?? null)}
       onTouchEnd={(event) => {
@@ -52,4 +56,4 @@ export function ArtworkStage({ artwork, onSwipePrevious, onSwipeNext }: ArtworkS
       <figcaption className="sr-only">{artwork.imageAttribution}</figcaption>
     </figure>
   )
-}
+})
