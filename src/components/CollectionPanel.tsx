@@ -18,7 +18,7 @@ export function CollectionPanel({ artworks, museumById, onSelect, onClose }: Col
       <div className="overlay-heading">
         <div>
           <h2 id="collection-title">典藏</h2>
-          <p>36 件開放典藏作品；顯示用影像由官方開放來源製作站內副本，完整原始來源逐件保留。</p>
+          <p>目前已載入 {artworks.length.toLocaleString('zh-TW')} 件；畫廊接近末端時會繼續向三館 API 取得下一批。</p>
         </div>
         <button ref={closeRef} className="icon-button" type="button" onClick={onClose} aria-label="關閉典藏"><CloseIcon /></button>
       </div>

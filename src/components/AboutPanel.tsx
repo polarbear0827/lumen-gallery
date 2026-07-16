@@ -23,8 +23,8 @@ export function AboutPanel({ museums, onClose }: AboutPanelProps) {
 
       <div className="about-layout">
         <div className="about-intro">
-          <p>光室是一座純前端數位畫廊，精選三間博物館共 36 件公共領域／CC0 作品。本站不裁切、不變形、不以色彩濾鏡改動畫作；畫面不足時只會等比例縮小，且不會超過顯示用影像的自然尺寸。</p>
-          <p>所有作品資料於 2026 年 7 月 16 日由官方 API 核對。為避免跨站影像服務在不同瀏覽器失效，本站保存官方開放影像的顯示用副本；每件作品仍完整連結官方館藏頁、API 與原始影像。</p>
+          <p>光室是一座純前端數位畫廊，透過三間博物館 API 分批載入公共領域／CC0 作品。本站不裁切、不變形、不以色彩濾鏡改動畫作；一般畫廊與作品全螢幕都會依可用空間等比例放大或縮小。</p>
+          <p>36 件站內作品只作首次開啟與跨站影像失敗時的可靠備援，不是館藏上限。接近目前批次末端時，網站會自動向三館 API 取得更多作品；每件作品都保留官方館藏頁、API 與原始影像。</p>
         </div>
 
         <div className="api-list">
@@ -48,7 +48,7 @@ export function AboutPanel({ museums, onClose }: AboutPanelProps) {
           </section>
           <section>
             <h3>技術與隱私</h3>
-            <p>本站不使用 Cookie、不設分析追蹤、不收集個人資料。一般瀏覽只載入本站檔案；只有主動開啟官方館藏頁、API 或原始影像時，才會連線至典藏機構網域。</p>
+            <p>本站不使用 Cookie、不設分析追蹤、不收集個人資料。動態館藏會直接連線至三間博物館 API 與官方影像服務；若瀏覽器封鎖某張跨站影像，該筆會自動跳過，不留下空白作品。</p>
           </section>
         </div>
       </div>

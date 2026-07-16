@@ -38,6 +38,7 @@ export const artworks: Artwork[] = (catalog as CatalogArtwork[]).map(({ assetPat
   ...artwork,
   displayImageUrl: assetUrl(assetPath),
   thumbnailUrl: assetUrl(assetPath),
+  sourceKind: 'local',
 }))
 
 export const museumById = new Map(museums.map((museum) => [museum.id, museum]))

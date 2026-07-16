@@ -16,7 +16,7 @@
   --accent-bright: #f0c457;
   --serif: "Iowan Old Style", "Noto Serif TC", "Songti TC", "PMingLiU", serif;
   --header-height: 76px;
-  --filter-height: 58px;
+  --filter-height: 68px;
   --filmstrip-height: 126px;
   --drawer-width: min(500px, 31vw);
 }
@@ -101,6 +101,7 @@ a:focus-visible {
 }
 
 .app-shell {
+  height: 100svh;
   min-height: 100svh;
   display: grid;
   grid-template-rows: var(--header-height) var(--filter-height) minmax(0, 1fr) var(--filmstrip-height);
@@ -232,11 +233,25 @@ a:focus-visible {
 .museum-filters button {
   position: relative;
   flex: 0 0 auto;
-  min-height: 44px;
+  min-height: 52px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
   color: var(--text-soft);
   font-size: 14px;
   letter-spacing: .04em;
   white-space: nowrap;
+}
+
+.museum-filters button small {
+  color: #6f6b64;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: .02em;
+}
+
+.museum-filters button.is-active small {
+  color: #9f8c61;
 }
 
 .museum-filters button::after {
@@ -267,7 +282,7 @@ a:focus-visible {
 .gallery-main {
   min-height: 0;
   display: grid;
-  grid-template-rows: minmax(200px, 1fr) 116px;
+  grid-template-rows: minmax(200px, 1fr) 196px;
   gap: 14px;
   padding: 12px clamp(24px, 3vw, 52px) 18px;
 }
@@ -288,28 +303,19 @@ a:focus-visible {
   position: relative;
   max-width: 100%;
   max-height: 100%;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 9px;
   border: 1px solid #765c25;
   background: #0b0b0a;
   box-shadow: 0 16px 50px rgba(0, 0, 0, .35);
 }
 
-.artwork-frame::after {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  pointer-events: none;
-  border: 1px solid #27231b;
-}
-
 .artwork-frame img {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: min(54svh, 590px);
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
   display: block;
   object-fit: contain;
 }
@@ -333,7 +339,7 @@ a:focus-visible {
 }
 
 .gallery-lower {
-  height: 116px;
+  height: 196px;
   display: flex;
   align-items: end;
   justify-content: space-between;
@@ -343,9 +349,14 @@ a:focus-visible {
 .artwork-meta {
   min-width: 0;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.artwork-copy {
+  min-width: 0;
+  align-self: end;
+  padding-bottom: 10px;
 }
 
 .artwork-stage:fullscreen {
@@ -358,8 +369,6 @@ a:focus-visible {
 }
 
 .artwork-stage:fullscreen .artwork-frame {
-  width: 100vw;
-  height: 100vh;
   max-width: none;
   max-height: none;
   padding: 0;
@@ -369,29 +378,25 @@ a:focus-visible {
   aspect-ratio: auto !important;
 }
 
-.artwork-stage:fullscreen .artwork-frame::after {
-  display: none;
-}
-
 .artwork-stage:fullscreen .artwork-frame img {
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   max-width: 100vw;
   max-height: 100vh;
+  object-fit: contain;
   opacity: 1;
 }
 
 .artwork-meta h1 {
-  max-width: 22ch;
+  max-width: min(70vw, 60ch);
   margin: 0;
-  overflow: hidden;
   font-family: var(--serif);
-  font-size: clamp(26px, 2.6vw, 39px);
+  font-size: clamp(20px, 1.8vw, 31px);
   font-weight: 500;
-  line-height: 1.15;
+  line-height: 1.18;
   letter-spacing: .03em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .metadata-line {
@@ -400,16 +405,11 @@ a:focus-visible {
   align-items: center;
   gap: 15px;
   margin-top: 6px;
-  overflow: hidden;
+  flex-wrap: wrap;
   color: var(--text-soft);
   font-size: 13px;
   line-height: 1.4;
-  white-space: nowrap;
-}
-
-.metadata-line span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
 }
 
 .metadata-divider {
@@ -420,11 +420,14 @@ a:focus-visible {
 }
 
 .details-button {
+  align-self: end;
+  justify-self: start;
+  height: 42px;
   min-height: 42px;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 0;
   padding: 0 14px;
   border: 1px solid var(--accent);
   color: var(--accent-bright);
@@ -444,8 +447,9 @@ a:focus-visible {
 }
 
 .gallery-controls {
+  align-self: end;
   display: grid;
-  grid-template-columns: 48px auto 48px;
+  grid-template-columns: 48px minmax(210px, auto) 48px;
   align-items: center;
   gap: 18px;
   flex: 0 0 auto;
@@ -475,8 +479,14 @@ a:focus-visible {
   height: 23px;
 }
 
-.gallery-controls p {
-  min-width: 78px;
+.gallery-count {
+  min-width: 210px;
+  display: grid;
+  gap: 3px;
+  text-align: center;
+}
+
+.gallery-count p {
   margin: 0;
   font-family: var(--serif);
   font-size: 18px;
@@ -484,13 +494,19 @@ a:focus-visible {
   text-align: center;
 }
 
-.gallery-controls strong {
+.gallery-count small {
+  color: #77736c;
+  font-size: 10px;
+  letter-spacing: .04em;
+}
+
+.gallery-count strong {
   color: var(--accent-bright);
   font-size: 25px;
   font-weight: 500;
 }
 
-.gallery-controls span {
+.gallery-count span {
   color: var(--text-soft);
 }
 
@@ -880,12 +896,16 @@ kbd {
 @media (max-height: 760px) and (min-width: 760px) {
   :root {
     --header-height: 62px;
-    --filter-height: 48px;
+    --filter-height: 58px;
     --filmstrip-height: 102px;
   }
 
-  .artwork-frame img {
-    max-height: 43svh;
+  .gallery-main {
+    grid-template-rows: minmax(180px, 1fr) 164px;
+  }
+
+  .gallery-lower {
+    height: 164px;
   }
 
   .filmstrip button {
@@ -894,12 +914,12 @@ kbd {
   }
 
   .artwork-meta h1 {
-    font-size: 26px;
+    font-size: 21px;
   }
 
   .details-button {
+    height: 36px;
     min-height: 36px;
-    margin-top: 6px;
   }
 }
 
@@ -915,6 +935,7 @@ kbd {
   }
 
   .app-shell {
+    height: auto;
     min-height: 100svh;
     display: block;
     overflow-y: auto;
@@ -992,6 +1013,10 @@ kbd {
     font-size: 14px;
   }
 
+  .museum-filters button small {
+    display: none;
+  }
+
   .filter-desktop-label {
     display: none;
   }
@@ -1006,6 +1031,7 @@ kbd {
   }
 
   .artwork-stage {
+    height: 42svh;
     min-height: 0;
     align-items: center;
     overflow: visible;
@@ -1013,16 +1039,7 @@ kbd {
   }
 
   .artwork-frame {
-    max-height: 38svh;
-    padding: 6px;
-  }
-
-  .artwork-frame::after {
-    inset: 3px;
-  }
-
-  .artwork-frame img {
-    max-height: calc(38svh - 14px);
+    max-height: 100%;
   }
 
   .gallery-lower {
@@ -1030,6 +1047,15 @@ kbd {
     display: grid;
     gap: 16px;
     margin-top: 18px;
+  }
+
+  .artwork-meta {
+    height: auto;
+    display: block;
+  }
+
+  .artwork-copy {
+    padding-bottom: 0;
   }
 
   .artwork-meta h1 {
@@ -1057,6 +1083,7 @@ kbd {
 
   .details-button {
     width: 100%;
+    height: auto;
     min-height: 52px;
     justify-content: center;
     margin-top: 14px;

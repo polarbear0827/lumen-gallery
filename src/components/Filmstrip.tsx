@@ -5,9 +5,10 @@ interface FilmstripProps {
   artworks: Artwork[]
   selectedId: string
   onSelect: (id: string) => void
+  onImageError: (id: string) => void
 }
 
-export const Filmstrip = memo(function Filmstrip({ artworks, selectedId, onSelect }: FilmstripProps) {
+export const Filmstrip = memo(function Filmstrip({ artworks, selectedId, onSelect, onImageError }: FilmstripProps) {
   const selectedRef = useRef<HTMLButtonElement | null>(null)
   const trackRef = useRef<HTMLDivElement | null>(null)
 
@@ -42,6 +43,7 @@ export const Filmstrip = memo(function Filmstrip({ artworks, selectedId, onSelec
                 loading={selected ? 'eager' : 'lazy'}
                 decoding="async"
                 draggable={false}
+                onError={() => onImageError(artwork.id)}
               />
             </button>
           )

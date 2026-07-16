@@ -32,4 +32,5 @@ export interface Artwork {
   aspectWidth: number
   aspectHeight: number
   imageAttribution: string
+  sourceKind?: 'local' | 'api'
 }

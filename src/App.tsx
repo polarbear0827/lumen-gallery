@@ -8,12 +8,14 @@ import { GalleryControls } from './components/GalleryControls'
 import { Header, type ViewName } from './components/Header'
 import { MuseumFilters } from './components/MuseumFilters'
 import { SourceDrawer } from './components/SourceDrawer'
-import { artworks, museumById, museums } from './data/artworks'
+import { artworks as initialArtworks, museumById, museums } from './data/artworks'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
+import { useMuseumFeed } from './hooks/useMuseumFeed'
 import type { MuseumId } from './types'
 
 export default function App() {
-  const [selectedId, setSelectedId] = useState(artworks[0].id)
+  const { artworks, totals, loaded, loading, errors, loadMore, discardArtwork } = useMuseumFeed()
+  const [selectedId, setSelectedId] = useState(initialArtworks[0].id)
   const [museumFilter, setMuseumFilter] = useState<MuseumId | 'all'>('all')
   const [view, setView] = useState<ViewName>('gallery')
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -24,7 +26,7 @@ export default function App() {
 
   const filteredArtworks = useMemo(
     () => museumFilter === 'all' ? artworks : artworks.filter((artwork) => artwork.museumId === museumFilter),
-    [museumFilter],
+    [artworks, museumFilter],
   )
 
   const selectedIndex = Math.max(0, filteredArtworks.findIndex((artwork) => artwork.id === selectedId))
@@ -47,7 +49,7 @@ export default function App() {
     setMuseumFilter(nextFilter)
     const nextWorks = nextFilter === 'all' ? artworks : artworks.filter((artwork) => artwork.museumId === nextFilter)
     setSelectedId((currentId) => nextWorks.some((artwork) => artwork.id === currentId) ? currentId : nextWorks[0].id)
-  }, [])
+  }, [artworks])
 
   const handleViewChange = useCallback((nextView: ViewName) => {
     setView(nextView)
@@ -109,6 +111,32 @@ export default function App() {
     }
   }, [filteredArtworks, selectedIndex])
 
+  useEffect(() => {
+    if (filteredArtworks.length - selectedIndex > 10) return
+    if (museumFilter === 'all') {
+      void Promise.all(museums.map((museum) => loadMore(museum.id)))
+    } else {
+      void loadMore(museumFilter)
+    }
+  }, [filteredArtworks.length, loadMore, museumFilter, selectedIndex])
+
+  const handleImageError = useCallback((id: string) => {
+    const failedArtwork = artworks.find((artwork) => artwork.id === id)
+    if (failedArtwork?.sourceKind !== 'api') return
+    if (selectedId === id && filteredArtworks.length > 1) selectByOffset(1)
+    discardArtwork(id)
+  }, [artworks, discardArtwork, filteredArtworks.length, selectByOffset, selectedId])
+
+  const knownTotals = Object.values(totals).filter((value): value is number => value !== null)
+  const availableTotal = museumFilter === 'all'
+    ? knownTotals.length > 0
+      ? knownTotals.reduce((sum, value) => sum + value, 0)
+      : null
+    : totals[museumFilter]
+  const isLoading = museumFilter === 'all'
+    ? Object.values(loading).some(Boolean)
+    : loading[museumFilter]
+
   return (
     <div className={`app-shell ${detailsOpen ? 'has-drawer' : ''}`}>
       <a className="skip-link" href="#gallery-main">跳至主要內容</a>
@@ -121,15 +149,22 @@ export default function App() {
         onMenuToggle={() => setMobileMenuOpen((open) => !open)}
       />
 
-      <MuseumFilters museums={museums} selected={museumFilter} onChange={handleFilterChange} />
+      <MuseumFilters
+        museums={museums}
+        selected={museumFilter}
+        totals={totals}
+        loaded={loaded}
+        loading={loading}
+        onChange={handleFilterChange}
+      />
 
       <main id="gallery-main" className="gallery-main" aria-hidden={view !== 'gallery'}>
         <ArtworkStage
           ref={artworkStageRef}
-          key={selectedArtwork.id}
           artwork={selectedArtwork}
           onSwipePrevious={() => selectByOffset(-1)}
           onSwipeNext={() => selectByOffset(1)}
+          onImageError={handleImageError}
         />
         <div className="gallery-lower">
           <ArtworkMeta
@@ -141,13 +176,19 @@ export default function App() {
           <GalleryControls
             current={selectedIndex + 1}
             total={filteredArtworks.length}
+            availableTotal={availableTotal}
+            isLoading={isLoading}
             onPrevious={() => selectByOffset(-1)}
             onNext={() => selectByOffset(1)}
           />
         </div>
       </main>
 
-      <Filmstrip artworks={filteredArtworks} selectedId={selectedArtwork.id} onSelect={setSelectedId} />
+      <Filmstrip artworks={filteredArtworks} selectedId={selectedArtwork.id} onSelect={setSelectedId} onImageError={handleImageError} />
+
+      <div className="api-status sr-only" aria-live="polite">
+        {Object.entries(errors).filter(([, error]) => error).map(([museumId, error]) => `${museumId}：${error}`).join('；')}
+      </div>
 
       <div className="sr-only" aria-live="polite">
         已選擇《{selectedArtwork.titleZh}》，{selectedArtwork.artist}，{selectedArtwork.date}
