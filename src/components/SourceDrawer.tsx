@@ -41,6 +41,10 @@ export function SourceDrawer({ artwork, museum, onClose }: SourceDrawerProps) {
             <dt>作品</dt>
             <dd>{artwork.titleZh}</dd>
           </div>
+          <div>
+            <dt>作品類型</dt>
+            <dd>{artwork.kind === 'painting' ? '繪畫' : '攝影'}</dd>
+          </div>
           {fields.map(([label, key]) => (
             <div key={key}>
               <dt>{label}</dt>
@@ -57,7 +61,7 @@ export function SourceDrawer({ artwork, museum, onClose }: SourceDrawerProps) {
           </div>
           <div>
             <dt>影像來源</dt>
-            <dd>本站保存之官方開放影像顯示用副本；{artwork.imageAttribution}</dd>
+            <dd>{artwork.sourceKind === 'local' ? '本站保存之官方開放影像顯示用副本；' : '典藏機構官方影像；'}{artwork.imageAttribution}</dd>
           </div>
           <div>
             <dt>資料來源</dt>

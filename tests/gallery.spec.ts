@@ -1,6 +1,11 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+
+async function useLocalFallbackOnly(page: Page) {
+  await page.route(/(collectionapi\.metmuseum|api\.artic|openaccess-api\.clevelandart)/, (route) => route.abort())
+}
 
 test('作品不裁切、不變形，並可切換作品', async ({ page }) => {
+  await useLocalFallbackOnly(page)
   await page.goto('./')
   await expect(page).toHaveTitle(/光室/)
   await expect(page.getByRole('heading', { name: '麥田與柏樹' })).toBeVisible()
@@ -19,30 +24,22 @@ test('作品不裁切、不變形，並可切換作品', async ({ page }) => {
   await expect(page.getByRole('heading', { name: '戴草帽的自畫像' })).toBeVisible()
 })
 
-test('三館 API 會擴充作品資料池，站內備援影像正常載入', async ({ page }) => {
+test('API 載入至少一千件且全部是繪畫或攝影', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', '只需在桌面版驗證一次大型 API 批次')
   await page.goto('./')
-  const nextButton = page.getByRole('button', { name: '下一件作品' })
-
-  await expect.poll(() => page.locator('.gallery-count small').textContent()).toMatch(/API 資料池 [\d,]+ 件/)
   await expect.poll(async () => {
     const text = await page.locator('.gallery-count p').textContent()
     return Number(text?.match(/已載入 ([\d,]+)/)?.[1].replaceAll(',', '') ?? 0)
-  }).toBeGreaterThan(36)
+  }, { timeout: 30_000 }).toBeGreaterThanOrEqual(1_000)
 
-  for (let index = 0; index < 12; index += 1) {
-    const image = page.locator('.artwork-frame img')
-    await expect.poll(() => image.evaluate((element: HTMLImageElement) => ({
-      complete: element.complete,
-      naturalWidth: element.naturalWidth,
-      opacity: getComputedStyle(element).opacity,
-      sameOrigin: new URL(element.currentSrc).origin === window.location.origin,
-    }))).toEqual({ complete: true, naturalWidth: expect.any(Number), opacity: '1', sameOrigin: true })
-    expect(await image.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0)
-    if (index < 11) await nextButton.click()
-  }
+  await page.getByRole('button', { name: '典藏' }).click()
+  const typeLabels = await page.locator('.collection-copy small').allTextContents()
+  expect(typeLabels.length).toBeGreaterThanOrEqual(1_000)
+  expect(typeLabels.every((label) => label.startsWith('繪畫') || label.startsWith('攝影'))).toBe(true)
 })
 
 test('完整作品題名允許換行且不使用省略裁切', async ({ page }) => {
+  await useLocalFallbackOnly(page)
   await page.goto('./')
   await page.getByRole('button', { name: '顯示《大碗島的星期日下午》' }).click()
   const title = page.getByRole('heading', { name: '大碗島的星期日下午' })
@@ -65,9 +62,9 @@ test('完整作品題名允許換行且不使用省略裁切', async ({ page }) 
 
 test('不同長寬比作品不會推動資料與導覽按鈕', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', '只在桌面版專案執行')
+  await useLocalFallbackOnly(page)
   await page.goto('./')
 
-  await expect.poll(() => page.locator('.gallery-count small').textContent()).toMatch(/API 資料池 [\d,]+ 件/)
   await expect.poll(() => page.locator('.artwork-frame img').evaluate((element: HTMLImageElement) => (
     element.complete && element.naturalWidth > 0
   ))).toBe(true)
@@ -92,6 +89,7 @@ test('不同長寬比作品不會推動資料與導覽按鈕', async ({ page }, 
 })
 
 test('完整來源面板可開啟並以鍵盤關閉', async ({ page }) => {
+  await useLocalFallbackOnly(page)
   await page.goto('./')
   const detailsButton = page.getByRole('button', { name: '作品資料與來源' })
   await expect(detailsButton).toBeVisible()
@@ -106,6 +104,7 @@ test('完整來源面板可開啟並以鍵盤關閉', async ({ page }) => {
 
 test('全螢幕只套用在作品舞台', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', '只在桌面版專案執行')
+  await useLocalFallbackOnly(page)
   await page.goto('./')
   const fullscreenButton = page.getByRole('button', { name: '作品全螢幕' })
   await expect(fullscreenButton).toBeVisible()
@@ -127,6 +126,7 @@ test('全螢幕只套用在作品舞台', async ({ page }, testInfo) => {
 
 test('行動版沒有水平溢位，控制項符合觸控尺寸', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile', '只在行動版專案執行')
+  await useLocalFallbackOnly(page)
   await page.goto('./')
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
@@ -134,4 +134,23 @@ test('行動版沒有水平溢位，控制項符合觸控尺寸', async ({ page 
   const detailsButton = page.getByRole('button', { name: '作品資料與來源' })
   const box = await detailsButton.boundingBox()
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(44)
+
+  const slideshowBox = await page.getByRole('button', { name: '開啟輪播模式' }).boundingBox()
+  expect(slideshowBox?.height ?? 0).toBeGreaterThanOrEqual(44)
+})
+
+test('輪播模式可啟動、自動換畫並暫停', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', '只在桌面版驗證計時互動')
+  await useLocalFallbackOnly(page)
+  await page.goto('./')
+
+  const before = await page.locator('.gallery-count strong').textContent()
+  await page.getByRole('button', { name: '開啟輪播模式' }).click()
+  await expect(page.getByRole('button', { name: '暫停輪播模式' })).toHaveAttribute('aria-pressed', 'true')
+  await page.waitForTimeout(6_300)
+  const after = await page.locator('.gallery-count strong').textContent()
+  expect(after).not.toBe(before)
+
+  await page.getByRole('button', { name: '暫停輪播模式' }).click()
+  await expect(page.getByRole('button', { name: '開啟輪播模式' })).toHaveAttribute('aria-pressed', 'false')
 })

@@ -21,7 +21,7 @@ export function useMuseumFeed() {
   const cursors = useRef<MuseumRecord<number>>({
     met: randomCursor(3_000),
     aic: randomCursor(9_000),
-    cma: randomCursor(40_000),
+    cma: 0,
   })
   const loadingNow = useRef(new Set<MuseumId>())
 
@@ -64,11 +64,11 @@ export function useMuseumFeed() {
     ...remote[museumId],
   ]), [remote])
 
-  const loaded = useMemo<MuseumRecord<number>>(() => ({
-    met: artworks.filter((artwork) => artwork.museumId === 'met').length,
-    aic: artworks.filter((artwork) => artwork.museumId === 'aic').length,
-    cma: artworks.filter((artwork) => artwork.museumId === 'cma').length,
-  }), [artworks])
+  const loaded = useMemo<MuseumRecord<number>>(() => {
+    const counts: MuseumRecord<number> = { met: 0, aic: 0, cma: 0 }
+    for (const artwork of artworks) counts[artwork.museumId] += 1
+    return counts
+  }, [artworks])
 
   const discardArtwork = useCallback((id: string) => {
     setRemote((current) => ({
