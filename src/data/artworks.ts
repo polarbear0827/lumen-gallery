@@ -28,17 +28,20 @@ export const museums: Museum[] = [
   },
 ]
 
-type CatalogArtwork = Omit<Artwork, 'displayImageUrl' | 'thumbnailUrl'> & { assetPath: string }
+type CatalogArtwork = Omit<Artwork, 'displayImageUrl' | 'thumbnailUrl' | 'kind'> & { assetPath: string }
 
 function assetUrl(path: string) {
   return `${import.meta.env.BASE_URL}${path}`
 }
 
-export const artworks: Artwork[] = (catalog as CatalogArtwork[]).map(({ assetPath, ...artwork }) => ({
-  ...artwork,
-  displayImageUrl: assetUrl(assetPath),
-  thumbnailUrl: assetUrl(assetPath),
-  sourceKind: 'local',
-}))
+export const artworks: Artwork[] = (catalog as CatalogArtwork[])
+  .filter((artwork) => artwork.id !== 'aic-24645')
+  .map(({ assetPath, ...artwork }) => ({
+    ...artwork,
+    kind: 'painting',
+    displayImageUrl: assetUrl(assetPath),
+    thumbnailUrl: assetUrl(assetPath),
+    sourceKind: 'local',
+  }))
 
 export const museumById = new Map(museums.map((museum) => [museum.id, museum]))

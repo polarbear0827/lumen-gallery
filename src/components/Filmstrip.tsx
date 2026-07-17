@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import type { Artwork } from '../types'
 
 interface FilmstripProps {
@@ -11,6 +11,11 @@ interface FilmstripProps {
 export const Filmstrip = memo(function Filmstrip({ artworks, selectedId, onSelect, onImageError }: FilmstripProps) {
   const selectedRef = useRef<HTMLButtonElement | null>(null)
   const trackRef = useRef<HTMLDivElement | null>(null)
+  const visibleArtworks = useMemo(() => {
+    const selectedIndex = Math.max(0, artworks.findIndex((artwork) => artwork.id === selectedId))
+    const start = Math.max(0, Math.min(selectedIndex - 60, artworks.length - 121))
+    return artworks.slice(start, start + 121)
+  }, [artworks, selectedId])
 
   useEffect(() => {
     const selected = selectedRef.current
@@ -23,7 +28,7 @@ export const Filmstrip = memo(function Filmstrip({ artworks, selectedId, onSelec
   return (
     <div className="filmstrip" aria-label="作品縮圖列">
       <div ref={trackRef} className="filmstrip-track">
-        {artworks.map((artwork) => {
+        {visibleArtworks.map((artwork) => {
           const selected = artwork.id === selectedId
           return (
             <button

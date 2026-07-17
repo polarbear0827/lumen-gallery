@@ -1,4 +1,4 @@
-import type { Artwork, MuseumId } from '../types'
+import type { Artwork, ArtworkKind, MuseumId } from '../types'
 
 const CC0_URL = 'https://creativecommons.org/publicdomain/zero/1.0/'
 const MET_API = 'https://collectionapi.metmuseum.org/public/collection/v1'
@@ -32,6 +32,8 @@ interface MetObject {
   creditLine: string
   accessionNumber: string
   objectURL: string
+  objectName: string
+  classification: string
 }
 
 interface AicArtwork {
@@ -47,6 +49,8 @@ interface AicArtwork {
   main_reference_number: string
   image_id: string
   is_public_domain: boolean
+  artwork_type_title: string | null
+  classification_title: string | null
   thumbnail?: { width?: number; height?: number }
 }
 
@@ -67,6 +71,7 @@ interface CmaArtwork {
   creditline: string | null
   share_license_status: string
   url?: string
+  type: string | null
 }
 
 async function getJson<T>(url: string): Promise<T> {
@@ -94,11 +99,20 @@ function getMetSearch() {
   return metSearchPromise
 }
 
+function metArtworkKind(data: MetObject): ArtworkKind | null {
+  const type = `${data.objectName} ${data.classification}`.toLocaleLowerCase('en')
+  if (/\bphotographs?\b/.test(type)) return 'photograph'
+  if (/\bpaintings?\b/.test(type)) return 'painting'
+  return null
+}
+
 function mapMetArtwork(data: MetObject): Artwork | null {
-  if (!data.isPublicDomain || !data.primaryImageSmall) return null
+  const kind = metArtworkKind(data)
+  if (!data.isPublicDomain || !data.primaryImageSmall || !kind) return null
   return {
     id: `met-api-${data.objectID}`,
     museumId: 'met',
+    kind,
     titleZh: data.title || '未命名作品',
     originalTitle: data.title || 'Untitled',
     artist: data.artistDisplayName || '作者不詳',
@@ -149,6 +163,7 @@ function mapAicArtwork(data: AicArtwork): Artwork {
   return {
     id: `aic-api-${data.id}`,
     museumId: 'aic',
+    kind: data.artwork_type_title === 'Photograph' ? 'photograph' : 'painting',
     titleZh: data.title || '未命名作品',
     originalTitle: data.title || 'Untitled',
     artist: data.artist_title || '作者不詳',
@@ -177,6 +192,7 @@ export async function loadAicBatch(cursor: number, batchSize = 24): Promise<Muse
   const fields = [
     'id', 'title', 'artist_title', 'artist_display', 'date_display', 'medium_display', 'dimensions',
     'department_title', 'credit_line', 'main_reference_number', 'image_id', 'is_public_domain', 'thumbnail',
+    'artwork_type_title', 'classification_title',
   ].join(',')
   const page = Math.floor((cursor % 9_900) / 100) + 1
   const params = new URLSearchParams({ page: String(page), limit: '100', fields })
@@ -184,7 +200,9 @@ export async function loadAicBatch(cursor: number, batchSize = 24): Promise<Muse
   return {
     museumId: 'aic',
     artworks: response.data
-      .filter((item) => item.is_public_domain && item.image_id)
+      .filter((item) => item.is_public_domain && item.image_id && (
+        item.artwork_type_title === 'Painting' || item.artwork_type_title === 'Photograph'
+      ))
       .slice(0, batchSize)
       .map(mapAicArtwork),
     total: response.pagination.total,
@@ -194,12 +212,13 @@ export async function loadAicBatch(cursor: number, batchSize = 24): Promise<Muse
 
 function mapCmaArtwork(data: CmaArtwork): Artwork | null {
   const image = data.images?.web
-  if (data.share_license_status !== 'CC0' || !image?.url) return null
+  if (data.share_license_status !== 'CC0' || !image?.url || data.type !== 'Painting') return null
   const creator = data.creators?.find((item) => item.use_in_caption) ?? data.creators?.[0]
   const creatorName = creator?.description?.split(' (')[0] || '作者不詳'
   return {
     id: `cma-api-${data.accession_number}`,
     museumId: 'cma',
+    kind: 'painting',
     titleZh: data.title || '未命名作品',
     originalTitle: data.title || 'Untitled',
     artist: creatorName,
@@ -224,8 +243,14 @@ function mapCmaArtwork(data: CmaArtwork): Artwork | null {
   }
 }
 
-export async function loadCmaBatch(cursor: number, batchSize = 24): Promise<MuseumBatch> {
-  const params = new URLSearchParams({ cc0: '', has_image: '1', skip: String(cursor), limit: String(batchSize) })
+export async function loadCmaBatch(cursor: number, batchSize = 1_000): Promise<MuseumBatch> {
+  const params = new URLSearchParams({
+    cc0: '',
+    has_image: '1',
+    type: 'Painting',
+    skip: String(cursor),
+    limit: String(batchSize),
+  })
   const response = await getJson<{ info: { total: number }; data: CmaArtwork[] }>(`${CMA_API}/artworks/?${params}`)
   return {
     museumId: 'cma',

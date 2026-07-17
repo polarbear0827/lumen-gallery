@@ -51,3 +51,11 @@ export function InfoIcon(props: IconProps) {
 export function GridIcon(props: IconProps) {
   return <svg {...baseProps} {...props}><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" /></svg>
 }
+
+export function PlayIcon(props: IconProps) {
+  return <svg {...baseProps} {...props}><path d="m8 5 11 7-11 7V5Z" /></svg>
+}
+
+export function PauseIcon(props: IconProps) {
+  return <svg {...baseProps} {...props}><path d="M8 5v14M16 5v14" /></svg>
+}

@@ -14,13 +14,14 @@ import { useMuseumFeed } from './hooks/useMuseumFeed'
 import type { MuseumId } from './types'
 
 export default function App() {
-  const { artworks, totals, loaded, loading, errors, loadMore, discardArtwork } = useMuseumFeed()
+  const { artworks, loaded, loading, errors, loadMore, discardArtwork } = useMuseumFeed()
   const [selectedId, setSelectedId] = useState(initialArtworks[0].id)
   const [museumFilter, setMuseumFilter] = useState<MuseumId | 'all'>('all')
   const [view, setView] = useState<ViewName>('gallery')
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement))
+  const [isSlideshow, setIsSlideshow] = useState(false)
   const detailsButtonRef = useRef<HTMLButtonElement>(null)
   const artworkStageRef = useRef<HTMLElement>(null)
 
@@ -120,6 +121,14 @@ export default function App() {
     }
   }, [filteredArtworks.length, loadMore, museumFilter, selectedIndex])
 
+  useEffect(() => {
+    if (!isSlideshow || view !== 'gallery' || detailsOpen || filteredArtworks.length < 2) return
+    const timer = window.setInterval(() => {
+      if (!document.hidden) selectByOffset(1)
+    }, 6_000)
+    return () => window.clearInterval(timer)
+  }, [detailsOpen, filteredArtworks.length, isSlideshow, selectByOffset, view])
+
   const handleImageError = useCallback((id: string) => {
     const failedArtwork = artworks.find((artwork) => artwork.id === id)
     if (failedArtwork?.sourceKind !== 'api') return
@@ -127,12 +136,6 @@ export default function App() {
     discardArtwork(id)
   }, [artworks, discardArtwork, filteredArtworks.length, selectByOffset, selectedId])
 
-  const knownTotals = Object.values(totals).filter((value): value is number => value !== null)
-  const availableTotal = museumFilter === 'all'
-    ? knownTotals.length > 0
-      ? knownTotals.reduce((sum, value) => sum + value, 0)
-      : null
-    : totals[museumFilter]
   const isLoading = museumFilter === 'all'
     ? Object.values(loading).some(Boolean)
     : loading[museumFilter]
@@ -152,7 +155,6 @@ export default function App() {
       <MuseumFilters
         museums={museums}
         selected={museumFilter}
-        totals={totals}
         loaded={loaded}
         loading={loading}
         onChange={handleFilterChange}
@@ -176,10 +178,11 @@ export default function App() {
           <GalleryControls
             current={selectedIndex + 1}
             total={filteredArtworks.length}
-            availableTotal={availableTotal}
             isLoading={isLoading}
+            isSlideshow={isSlideshow}
             onPrevious={() => selectByOffset(-1)}
             onNext={() => selectByOffset(1)}
+            onSlideshowToggle={() => setIsSlideshow((active) => !active)}
           />
         </div>
       </main>

@@ -1,4 +1,5 @@
 export type MuseumId = 'met' | 'aic' | 'cma'
+export type ArtworkKind = 'painting' | 'photograph'
 
 export interface Museum {
   id: MuseumId
@@ -12,6 +13,7 @@ export interface Museum {
 export interface Artwork {
   id: string
   museumId: MuseumId
+  kind: ArtworkKind
   titleZh: string
   originalTitle: string
   artist: string
